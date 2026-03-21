@@ -1,6 +1,9 @@
 import { useMemo, MouseEvent } from '@framework';
 import { Rect, Position, PdfAnnotationBorderStyle } from '@embedpdf/models';
-import { generateCloudyPolygonPath } from '@embedpdf/plugin-annotation';
+import {
+  generateCloudyPolygonPath,
+  generateCloudyPolylinePath,
+} from '@embedpdf/plugin-annotation';
 
 const MIN_HIT_AREA_SCREEN_PX = 20;
 
@@ -61,9 +64,19 @@ export function Polygon({
   }, [localPts, currentVertex]);
 
   const cloudyPath = useMemo(() => {
-    if (!isCloudy || allPoints.length < 3) return null;
+    if (!isCloudy) return null;
+    if (currentVertex) {
+      if (allPoints.length < 2) return null;
+      return generateCloudyPolylinePath(
+        allPoints,
+        rect.origin,
+        cloudyBorderIntensity!,
+        strokeWidth,
+      );
+    }
+    if (allPoints.length < 3) return null;
     return generateCloudyPolygonPath(allPoints, rect.origin, cloudyBorderIntensity!, strokeWidth);
-  }, [isCloudy, allPoints, rect.origin, cloudyBorderIntensity, strokeWidth]);
+  }, [isCloudy, allPoints, rect.origin, cloudyBorderIntensity, strokeWidth, currentVertex]);
 
   const isPreviewing = currentVertex && vertices.length > 0;
 
@@ -108,17 +121,32 @@ export function Polygon({
       {!appearanceActive && (
         <>
           {isCloudy && cloudyPath ? (
-            <path
-              d={cloudyPath.path}
-              opacity={opacity}
-              style={{
-                fill: color,
-                stroke: strokeColor ?? color,
-                strokeWidth,
-                pointerEvents: 'none',
-                strokeLinejoin: 'round',
-              }}
-            />
+            <>
+              <path
+                d={cloudyPath.path}
+                opacity={opacity}
+                style={{
+                  fill: currentVertex ? 'none' : color,
+                  stroke: strokeColor ?? color,
+                  strokeWidth,
+                  pointerEvents: 'none',
+                  strokeLinejoin: 'round',
+                }}
+              />
+              {isPreviewing && vertices.length >= 2 && (
+                <rect
+                  x={localPts[0].x - handleSize / scale / 2}
+                  y={localPts[0].y - handleSize / scale / 2}
+                  width={handleSize / scale}
+                  height={handleSize / scale}
+                  fill={strokeColor}
+                  opacity={0.4}
+                  stroke={strokeColor}
+                  strokeWidth={strokeWidth / 2}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
+            </>
           ) : (
             <>
               <path

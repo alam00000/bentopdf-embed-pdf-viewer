@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Rect, Position } from '@embedpdf/models';
   import { PdfAnnotationBorderStyle } from '@embedpdf/models';
-  import { generateCloudyPolygonPath } from '@embedpdf/plugin-annotation';
+  import { generateCloudyPolygonPath, generateCloudyPolylinePath } from '@embedpdf/plugin-annotation';
 
   const MIN_HIT_AREA_SCREEN_PX = 20;
 
@@ -61,7 +61,12 @@
   });
 
   const cloudyPath = $derived.by(() => {
-    if (!isCloudy || allPoints.length < 3) return null;
+    if (!isCloudy) return null;
+    if (currentVertex) {
+      if (allPoints.length < 2) return null;
+      return generateCloudyPolylinePath(allPoints, rect.origin, cloudyBorderIntensity!, strokeWidth);
+    }
+    if (allPoints.length < 3) return null;
     return generateCloudyPolygonPath(allPoints, rect.origin, cloudyBorderIntensity!, strokeWidth);
   });
 
@@ -108,12 +113,25 @@
       <path
         d={cloudyPath.path}
         {opacity}
-        style:fill={color}
+        style:fill={currentVertex ? 'none' : color}
         style:stroke={strokeColor ?? color}
         style:stroke-width={strokeWidth}
         style:pointer-events="none"
         style:stroke-linejoin="round"
       />
+      {#if isPreviewing && vertices.length >= 2}
+        <rect
+          x={localPts[0].x - handleSize / scale / 2}
+          y={localPts[0].y - handleSize / scale / 2}
+          width={handleSize / scale}
+          height={handleSize / scale}
+          fill={strokeColor}
+          opacity={0.4}
+          stroke={strokeColor}
+          stroke-width={strokeWidth / 2}
+          style:pointer-events="none"
+        />
+      {/if}
     {:else}
       <path
         d={pathData}

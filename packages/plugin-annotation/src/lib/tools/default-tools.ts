@@ -360,7 +360,8 @@ export const defaultTools = [
   {
     id: 'polygon' as const,
     name: 'Polygon',
-    matchScore: (a) => (a.type === PdfAnnotationSubtype.POLYGON ? 1 : 0),
+    matchScore: (a) =>
+      a.type === PdfAnnotationSubtype.POLYGON && a.intent !== 'PolygonCloud' ? 5 : 0,
     interaction: {
       exclusive: false,
       cursor: 'crosshair',
@@ -380,6 +381,33 @@ export const defaultTools = [
       opacity: 1,
       strokeWidth: 6,
       strokeColor: '#E44234',
+    },
+  },
+  {
+    id: 'cloud' as const,
+    name: 'Cloud',
+    matchScore: (a) =>
+      a.type === PdfAnnotationSubtype.POLYGON && a.intent === 'PolygonCloud' ? 10 : 0,
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: false,
+      lockAspectRatio: false,
+      isGroupResizable: true,
+      lockGroupAspectRatio: (a) => {
+        const r = (((a.rotation ?? 0) % 90) + 90) % 90;
+        return r >= 6 && r <= 84;
+      },
+    },
+    defaults: {
+      type: PdfAnnotationSubtype.POLYGON,
+      intent: 'PolygonCloud',
+      color: 'transparent',
+      opacity: 1,
+      strokeWidth: 3,
+      strokeColor: '#E44234',
+      cloudyBorderIntensity: 2,
     },
   },
 

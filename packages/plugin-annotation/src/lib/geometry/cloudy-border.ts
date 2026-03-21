@@ -477,6 +477,132 @@ function cloudyPolygonImpl(
 }
 
 // ---------------------------------------------------------------------------
+// Core polyline algorithm
+// ---------------------------------------------------------------------------
+
+function cloudyPolylineImpl(
+  vertices: Point[],
+  intensity: number,
+  lineWidth: number,
+  out: PathBuilder,
+): void {
+  let polygon = removeZeroLengthSegments(vertices);
+  const numPoints = polygon.length;
+
+  if (numPoints < 2) return;
+
+  const closed = [...polygon, polygon[0]];
+  if (polygonDirection(closed) < 0) {
+    polygon = [...polygon].reverse();
+  }
+
+  if (intensity <= 0) {
+    out.moveTo(polygon[0].x, polygon[0].y);
+    for (let i = 1; i < numPoints; i++) {
+      out.curveTo(
+        polygon[i].x,
+        polygon[i].y,
+        polygon[i].x,
+        polygon[i].y,
+        polygon[i].x,
+        polygon[i].y,
+      );
+    }
+    return;
+  }
+
+  let idealRadius = getPolygonCloudRadius(intensity, lineWidth);
+  if (idealRadius < 0.5) idealRadius = 0.5;
+
+  const k = Math.cos(ANGLE_34);
+
+  const edgeAlphas: number[] = [];
+  for (let j = 0; j + 1 < numPoints; j++) {
+    const len = distance(polygon[j], polygon[j + 1]);
+    if (len <= 0 || len >= 2 * k * idealRadius) {
+      edgeAlphas.push(ANGLE_34);
+    } else {
+      edgeAlphas.push(Math.acos(Math.min(1, len / (2 * idealRadius))));
+    }
+  }
+
+  let anglePrev = 0;
+  let outputStarted = false;
+
+  for (let j = 0; j + 1 < numPoints; j++) {
+    const pt = polygon[j];
+    const ptNext = polygon[j + 1];
+    const len = distance(pt, ptNext);
+    if (len === 0) continue;
+
+    const params = computeParamsPolygon(idealRadius, k, len);
+    if (params.n < 0) {
+      if (!outputStarted) {
+        out.moveTo(pt.x, pt.y);
+        outputStarted = true;
+      }
+      continue;
+    }
+
+    const edgeRadius = Math.max(0.5, params.adjustedRadius);
+    const intermAdvance = 2 * k * edgeRadius;
+    const firstAdvance = k * idealRadius + k * edgeRadius;
+
+    const angleCur = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x);
+
+    if (j === 0) {
+      anglePrev = angleCur;
+    }
+
+    const cos = cosine(ptNext.x - pt.x, len);
+    const sin = sine(ptNext.y - pt.y, len);
+    let x = pt.x;
+    let y = pt.y;
+
+    const alpha = edgeAlphas[j];
+    const alphaPrevEdge = j === 0 ? ANGLE_34 : (edgeAlphas[j - 1] ?? ANGLE_34);
+
+    addCornerCurl(
+      anglePrev,
+      angleCur,
+      idealRadius,
+      pt.x,
+      pt.y,
+      alpha,
+      alphaPrevEdge,
+      out,
+      !outputStarted,
+    );
+    outputStarted = true;
+
+    if (params.n === 0) {
+      x += len * cos;
+      y += len * sin;
+    } else {
+      x += firstAdvance * cos;
+      y += firstAdvance * sin;
+
+      let numInterm = params.n;
+      if (params.n >= 1) {
+        addFirstIntermediateCurl(angleCur, edgeRadius, ANGLE_34, x, y, out);
+        x += intermAdvance * cos;
+        y += intermAdvance * sin;
+        numInterm = params.n - 1;
+      }
+
+      const template = getIntermediateCurlTemplate(angleCur, edgeRadius);
+      for (let i = 0; i < numInterm; i++) {
+        outputCurlTemplate(template, x, y, out);
+        x += intermAdvance * cos;
+        y += intermAdvance * sin;
+      }
+    }
+
+    anglePrev = angleCur;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Ellipse flattening
 // ---------------------------------------------------------------------------
 
@@ -828,5 +954,34 @@ export function generateCloudyPolygonPath(
   cloudyPolygonImpl(localPts, false, intensity, lineWidth, out);
   out.close();
 
+  return out.build(lineWidth);
+}
+
+/**
+ * Generates a cloudy border SVG path for an open polyline.
+ *
+ * @param vertices - The polyline vertices in annotation-local coordinates
+ * @param rectOrigin - The annotation rect origin `{ x, y }` for coordinate translation
+ * @param intensity - Cloudy border intensity
+ * @param lineWidth - Stroke width of the annotation border
+ */
+export function generateCloudyPolylinePath(
+  vertices: ReadonlyArray<{ x: number; y: number }>,
+  rectOrigin: { x: number; y: number },
+  intensity: number,
+  lineWidth: number,
+): CloudyPathResult {
+  const out = new PathBuilder();
+
+  if (vertices.length < 2) {
+    return out.build(lineWidth);
+  }
+
+  const localPts: Point[] = vertices.map((v) => ({
+    x: v.x - rectOrigin.x,
+    y: -(v.y - rectOrigin.y),
+  }));
+
+  cloudyPolylineImpl(localPts, intensity, lineWidth, out);
   return out.build(lineWidth);
 }

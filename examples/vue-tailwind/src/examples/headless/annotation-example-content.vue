@@ -6,7 +6,7 @@ import { RenderLayer } from '@embedpdf/plugin-render/vue';
 import { AnnotationLayer, useAnnotationCapability } from '@embedpdf/plugin-annotation/vue';
 import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/vue';
 import { SelectionLayer } from '@embedpdf/plugin-selection/vue';
-import { Check, X, Pencil, Square, Highlighter, Trash2 } from 'lucide-vue-next';
+import { Check, X, Pencil, Square, Highlighter, Cloud, Trash2 } from 'lucide-vue-next';
 
 const props = defineProps<{
   documentId: string;
@@ -24,6 +24,7 @@ const tools = [
   { id: 'ink', name: 'Pen', icon: Pencil },
   { id: 'square', name: 'Square', icon: Square },
   { id: 'highlight', name: 'Highlight', icon: Highlighter },
+  { id: 'cloud', name: 'Cloud', icon: Cloud },
 ];
 
 let unsubscribeToolChange: (() => void) | undefined;

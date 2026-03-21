@@ -12,6 +12,7 @@ import {
   CircleIcon,
   SquareIcon,
   PolygonIcon,
+  CloudIcon,
   PolylineIcon,
   LineIcon,
   ArrowIcon,
@@ -205,6 +206,15 @@ export function AnnotationToolbar({ documentId }: AnnotationToolbarProps) {
         title="Draw Polygon"
       >
         <PolygonIcon className="h-4 w-4" style={{ color: toolColors.polygon?.primaryColor }} />
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => toggleTool('cloud')}
+        isActive={activeTool?.id === 'cloud'}
+        aria-label="Cloud annotation"
+        title="Draw Cloud"
+      >
+        <CloudIcon className="h-4 w-4" style={{ color: toolColors.cloud?.primaryColor }} />
       </ToolbarButton>
 
       <ToolbarButton

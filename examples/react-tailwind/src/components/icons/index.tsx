@@ -851,6 +851,26 @@ export function PolygonIcon({ className, title, style }: IconProps) {
   );
 }
 
+export function CloudIcon({ className, title, style }: IconProps) {
+  return (
+    <svg
+      className={className}
+      style={style}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={!title}
+      role={title ? 'img' : 'presentation'}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+    </svg>
+  );
+}
+
 export function SquigglyIcon({ className, title, style }: IconProps) {
   return (
     <svg

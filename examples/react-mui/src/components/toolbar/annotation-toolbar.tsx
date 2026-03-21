@@ -5,6 +5,7 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 import SquareOutlinedIcon from '@mui/icons-material/SquareOutlined';
 import NorthEastOutlinedIcon from '@mui/icons-material/NorthEastOutlined';
+import CloudOutlinedIcon from '@mui/icons-material/CloudOutlined';
 import { AnnotationTool, useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { useEffect, useState } from 'react';
 import { ToggleIconButton } from '../toggle-icon-button';
@@ -60,6 +61,12 @@ export const AnnotationToolbar = ({ documentId }: AnnotationToolbarProps) => {
     if (!annotationProvider) return;
     const currentId = activeTool?.id ?? null;
     annotationProvider.setActiveTool(currentId === 'lineArrow' ? null : 'lineArrow');
+  };
+
+  const handleCloudAnnotation = () => {
+    if (!annotationProvider) return;
+    const currentId = activeTool?.id ?? null;
+    annotationProvider.setActiveTool(currentId === 'cloud' ? null : 'cloud');
   };
 
   const handleStampApprovedAnnotation = () => {
@@ -119,6 +126,14 @@ export const AnnotationToolbar = ({ documentId }: AnnotationToolbarProps) => {
           aria-label="Line arrow annotation"
         >
           <NorthEastOutlinedIcon fontSize="small" />
+        </ToggleIconButton>
+        <ToggleIconButton
+          tone="light"
+          isOpen={activeTool?.id === 'cloud'}
+          onClick={handleCloudAnnotation}
+          aria-label="Cloud annotation"
+        >
+          <CloudOutlinedIcon fontSize="small" />
         </ToggleIconButton>
         <ToggleIconButton
           tone="light"

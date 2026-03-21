@@ -11,7 +11,7 @@
   } from '@embedpdf/plugin-annotation/svelte';
   import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/svelte';
   import { SelectionLayer } from '@embedpdf/plugin-selection/svelte';
-  import { Pencil, Square, GitBranch, Stamp, Trash2 } from 'lucide-svelte';
+  import { Pencil, Square, GitBranch, Stamp, Cloud, Trash2 } from 'lucide-svelte';
 
   interface Props {
     documentId: string;
@@ -30,6 +30,7 @@
     { id: 'ink', name: 'Pen', icon: Pencil },
     { id: 'polyline', name: 'Polyline', icon: GitBranch },
     { id: 'stampImage', name: 'Stamp', icon: Stamp },
+    { id: 'cloud', name: 'Cloud', icon: Cloud },
   ];
 
   let unsubscribeToolChange: (() => void) | undefined;

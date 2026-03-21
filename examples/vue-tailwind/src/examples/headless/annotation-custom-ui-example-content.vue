@@ -6,7 +6,7 @@ import { RenderLayer } from '@embedpdf/plugin-render/vue';
 import { AnnotationLayer, useAnnotationCapability } from '@embedpdf/plugin-annotation/vue';
 import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/vue';
 import { SelectionLayer } from '@embedpdf/plugin-selection/vue';
-import { Pencil, Square, GitBranch, Stamp, Trash2 } from 'lucide-vue-next';
+import { Pencil, Square, GitBranch, Stamp, Cloud, Trash2 } from 'lucide-vue-next';
 
 const props = defineProps<{
   documentId: string;
@@ -23,6 +23,7 @@ const tools = [
   { id: 'ink', name: 'Pen', icon: Pencil },
   { id: 'polyline', name: 'Polyline', icon: GitBranch },
   { id: 'stampImage', name: 'Stamp', icon: Stamp },
+  { id: 'cloud', name: 'Cloud', icon: Cloud },
 ];
 
 let unsubscribeToolChange: (() => void) | undefined;

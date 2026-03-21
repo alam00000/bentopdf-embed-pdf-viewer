@@ -6,7 +6,7 @@
   import { AnnotationLayer, useAnnotationCapability } from '@embedpdf/plugin-annotation/svelte';
   import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/svelte';
   import { SelectionLayer } from '@embedpdf/plugin-selection/svelte';
-  import { Check, X, Pencil, Square, Highlighter, Trash2 } from 'lucide-svelte';
+  import { Check, X, Pencil, Square, Highlighter, Cloud, Trash2 } from 'lucide-svelte';
 
   interface Props {
     documentId: string;
@@ -26,6 +26,7 @@
     { id: 'ink', name: 'Pen', icon: Pencil },
     { id: 'square', name: 'Square', icon: Square },
     { id: 'highlight', name: 'Highlight', icon: Highlighter },
+    { id: 'cloud', name: 'Cloud', icon: Cloud },
   ];
 
   let unsubscribeToolChange: (() => void) | undefined;

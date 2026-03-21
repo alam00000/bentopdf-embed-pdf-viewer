@@ -29,18 +29,31 @@
 
     <!-- Visual -- hidden when AP active, never interactive -->
     <template v-if="!appearanceActive">
-      <path
-        v-if="isCloudy && cloudyPath"
-        :d="cloudyPath.path"
-        :opacity="opacity"
-        :style="{
-          fill: color,
-          stroke: strokeColor ?? color,
-          strokeWidth,
-          pointerEvents: 'none',
-          strokeLinejoin: 'round',
-        }"
-      />
+      <template v-if="isCloudy && cloudyPath">
+        <path
+          :d="cloudyPath.path"
+          :opacity="opacity"
+          :style="{
+            fill: currentVertex ? 'none' : color,
+            stroke: strokeColor ?? color,
+            strokeWidth,
+            pointerEvents: 'none',
+            strokeLinejoin: 'round',
+          }"
+        />
+        <rect
+          v-if="isPreviewing && vertices.length >= 2"
+          :x="localPts[0].x - handleSize / scale / 2"
+          :y="localPts[0].y - handleSize / scale / 2"
+          :width="handleSize / scale"
+          :height="handleSize / scale"
+          :fill="strokeColor"
+          :opacity="0.4"
+          :stroke="strokeColor"
+          :stroke-width="strokeWidth / 2"
+          style="pointer-events: none"
+        />
+      </template>
       <template v-else>
         <path
           :d="pathData"
@@ -95,7 +108,7 @@ export default { inheritAttrs: false };
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Rect, Position, PdfAnnotationBorderStyle } from '@embedpdf/models';
-import { generateCloudyPolygonPath } from '@embedpdf/plugin-annotation';
+import { generateCloudyPolygonPath, generateCloudyPolylinePath } from '@embedpdf/plugin-annotation';
 
 const MIN_HIT_AREA_SCREEN_PX = 20;
 
@@ -152,7 +165,17 @@ const pathData = computed(() => {
 });
 
 const cloudyPath = computed(() => {
-  if (!isCloudy.value || allPoints.value.length < 3) return null;
+  if (!isCloudy.value) return null;
+  if (props.currentVertex) {
+    if (allPoints.value.length < 2) return null;
+    return generateCloudyPolylinePath(
+      allPoints.value,
+      props.rect.origin,
+      props.cloudyBorderIntensity!,
+      props.strokeWidth,
+    );
+  }
+  if (allPoints.value.length < 3) return null;
   return generateCloudyPolygonPath(
     allPoints.value,
     props.rect.origin,
