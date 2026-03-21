@@ -1525,6 +1525,35 @@ export const commands: Record<string, Command<State>> = {
     },
   },
 
+  'annotation:add-cloud': {
+    id: 'annotation:add-cloud',
+    labelKey: 'annotation.cloud',
+    icon: 'cloud',
+    iconProps: ({ state }) => ({
+      primaryColor: getToolDefaultsById(state.plugins.annotation, 'cloud')?.strokeColor,
+      secondaryColor: getToolDefaultsById(state.plugins.annotation, 'cloud')?.color,
+    }),
+    categories: ['annotation', 'annotation-shape', 'annotation-cloud'],
+    action: ({ registry, documentId }) => {
+      const annotation = registry.getPlugin<AnnotationPlugin>(ANNOTATION_PLUGIN_ID)?.provides();
+      const annotationScope = annotation?.forDocument(documentId);
+      if (!annotationScope) return;
+
+      if (annotationScope.getActiveTool()?.id === 'cloud') {
+        annotationScope.setActiveTool(null);
+      } else {
+        annotationScope.setActiveTool('cloud');
+      }
+    },
+    active: ({ state, documentId }) => {
+      const annotation = state.plugins[ANNOTATION_PLUGIN_ID]?.documents[documentId];
+      return annotation?.activeToolId === 'cloud';
+    },
+    disabled: ({ state, documentId }) => {
+      return lacksPermission(state, documentId, PdfPermissionFlag.ModifyAnnotations);
+    },
+  },
+
   'annotation:add-polyline': {
     id: 'annotation:add-polyline',
     labelKey: 'annotation.polyline',

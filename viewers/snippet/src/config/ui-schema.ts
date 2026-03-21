@@ -511,13 +511,13 @@ export const viewerUISchema: UISchema = {
         breakpoints: {
           sm: {
             maxWidth: 640,
-            hide: ['add-polygon', 'add-polyline'],
+            hide: ['add-polygon', 'add-cloud', 'add-polyline'],
             show: ['overflow-shapes-tools'],
           },
           md: {
             minWidth: 640,
             hide: ['overflow-shapes-tools'],
-            show: ['add-polygon', 'add-polyline'],
+            show: ['add-polygon', 'add-cloud', 'add-polyline'],
           },
         },
       },
@@ -565,6 +565,13 @@ export const viewerUISchema: UISchema = {
               commandId: 'annotation:add-polygon',
               variant: 'icon',
               categories: ['annotation', 'annotation-shape', 'annotation-polygon'],
+            },
+            {
+              type: 'command-button',
+              id: 'add-cloud',
+              commandId: 'annotation:add-cloud',
+              variant: 'icon',
+              categories: ['annotation', 'annotation-shape', 'annotation-cloud'],
             },
             {
               type: 'command-button',

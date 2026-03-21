@@ -49,6 +49,7 @@ import { SquareIcon } from './square';
 import { LineIcon } from './line';
 import { LineArrowIcon } from './line-arrow';
 import { PolygonIcon } from './polygon';
+import { CloudIcon } from './cloud';
 import { ZigzagIcon } from './zigzag';
 import { TextIcon } from './text';
 import { ItalicIcon } from './italic';
@@ -143,6 +144,7 @@ export const icons: Icons = {
   line: LineIcon,
   lineArrow: LineArrowIcon,
   polygon: PolygonIcon,
+  cloud: CloudIcon,
   zigzag: ZigzagIcon,
   text: TextIcon,
   italic: ItalicIcon,
