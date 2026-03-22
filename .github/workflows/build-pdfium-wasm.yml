@@ -27,20 +27,15 @@ jobs:
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /opt/depot-tools
           echo "/opt/depot-tools" >> $GITHUB_PATH
 
-      - name: Fetch PDFium source
+      - name: Fetch PDFium source from fork
         run: |
           cd packages/pdfium
-          mkdir -p pdfium-src
-          cd pdfium-src
-          git init
-          git remote add origin https://pdfium.googlesource.com/pdfium.git
-          git fetch --depth=1 origin main
-          git checkout FETCH_HEAD
+          git clone --depth=1 https://github.com/alam00000/bentopdf-pdfium.git pdfium-src
 
           cat > "$GITHUB_WORKSPACE/.gclient" <<'EOF'
           solutions = [
             { "name": "packages/pdfium/pdfium-src",
-              "url":  "https://pdfium.googlesource.com/pdfium.git",
+              "url":  "https://github.com/alam00000/bentopdf-pdfium.git",
               "deps_file": "DEPS",
               "managed": False,
               "custom_deps": {},
@@ -56,7 +51,7 @@ jobs:
         run: |
           sudo bash packages/pdfium/pdfium-src/build/install-build-deps.sh --no-prompt
 
-      - name: Patch PDFium source with callout support
+      - name: Apply build patches
         run: |
           SRC=packages/pdfium/pdfium-src
           PATCH=packages/pdfium/build/patch
@@ -65,9 +60,6 @@ jobs:
           cp -f "$PATCH/build/config/BUILDCONFIG.gn" "$SRC/build/config/BUILDCONFIG.gn"
           cp -f "$PATCH/build/toolchain/wasm/BUILD.gn" "$SRC/build/toolchain/wasm/BUILD.gn"
           cp -f "$PATCH/core/fxge/BUILD.gn" "$SRC/core/fxge/BUILD.gn"
-          cp -f "$PATCH/fpdfsdk/fpdf_annot.cpp" "$SRC/fpdfsdk/fpdf_annot.cpp"
-          cp -f "$PATCH/public/fpdf_annot.h" "$SRC/public/fpdf_annot.h"
-          cp -f "$PATCH/constants/annotation_common.h" "$SRC/constants/annotation_common.h"
 
       - name: Generate build config
         run: |
