@@ -12,106 +12,23 @@ jobs:
       - name: Checkout embed-pdf-viewer
         uses: actions/checkout@v4
 
-      - name: Install Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 3.1.70
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install depot_tools
+      - name: Free disk space
         run: |
-          git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /opt/depot-tools
-          echo "/opt/depot-tools" >> $GITHUB_PATH
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          df -h
 
-      - name: Fetch PDFium source from fork
+      - name: Build WASM via Docker
         run: |
-          cd packages/pdfium
-          git clone --depth=1 https://github.com/alam00000/bentopdf-pdfium.git pdfium-src
-
-          cat > "$GITHUB_WORKSPACE/.gclient" <<'EOF'
-          solutions = [
-            { "name": "packages/pdfium/pdfium-src",
-              "url":  "https://github.com/alam00000/bentopdf-pdfium.git",
-              "deps_file": "DEPS",
-              "managed": False,
-              "custom_deps": {},
-            },
-          ]
-          EOF
-
-          cd "$GITHUB_WORKSPACE"
-          gclient sync --no-history --shallow --nohooks
-          rm .gclient
-
-      - name: Install PDFium build deps
-        run: |
-          sudo bash packages/pdfium/pdfium-src/build/install-build-deps.sh --no-prompt
-
-      - name: Apply build patches
-        run: |
-          SRC=packages/pdfium/pdfium-src
-          PATCH=packages/pdfium/build/patch
-
-          cp -f "$PATCH/BUILD.gn" "$SRC/BUILD.gn"
-          cp -f "$PATCH/build/config/BUILDCONFIG.gn" "$SRC/build/config/BUILDCONFIG.gn"
-          cp -f "$PATCH/build/toolchain/wasm/BUILD.gn" "$SRC/build/toolchain/wasm/BUILD.gn"
-          cp -f "$PATCH/core/fxge/BUILD.gn" "$SRC/core/fxge/BUILD.gn"
-
-      - name: Ensure libcxx_hardening target exists
-        run: |
-          COMPILER_GN=packages/pdfium/pdfium-src/build/config/compiler/BUILD.gn
-          for target in libcxx_hardening libcxx_module; do
-            if ! grep -q "\"$target\"" "$COMPILER_GN"; then
-              echo "config(\"$target\") {}" >> "$COMPILER_GN"
-            fi
-          done
-
-      - name: Generate build config
-        run: |
-          cd packages/pdfium/pdfium-src
-          gn gen out/wasm --args='is_debug=false treat_warnings_as_errors=false pdf_use_skia=false pdf_enable_xfa=false pdf_enable_v8=false is_component_build=false clang_use_chrome_plugins=false pdf_is_standalone=true use_debug_fission=false use_custom_libcxx=false use_sysroot=false pdf_is_complete_lib=true pdf_use_partition_alloc=false is_clang=false symbol_level=0 target_os="wasm" target_cpu="wasm"'
-
-      - name: Build libpdfium.a
-        run: |
-          cd packages/pdfium/pdfium-src
-          ninja -C out/wasm pdfium -v
-
-      - name: Generate export lists
-        run: |
-          SRC=packages/pdfium/pdfium-src
-          PDFIUM=packages/pdfium
-          WS=$PDFIUM/build/wasm
-          rm -rf "$WS" && mkdir -p "$WS"
-
-          ( cd "$SRC" &&
-            find public -path public/cpp -prune -o -name '*.h' -print |
-            sort | sed 's|^|#include "|;s|$|"|' ) > "$WS/all.h"
-
-          echo '#include "../build/code/cpp/ext_api.h"' >> "$WS/all.h"
-
-          clang -std=c11 -I"$SRC" -I"build/code/cpp" \
-                -fsyntax-only -Xclang -ast-dump=json "$WS/all.h" > "$WS/ast.json"
-
-          node "$PDFIUM/build/generate-functions.mjs" "$WS/ast.json" "$WS"
-          node "$PDFIUM/build/generate-runtime-methods.mjs" "$WS"
-
-      - name: Compile WASM
-        run: |
-          cd packages/pdfium/build
-          bash ./compile.esm.sh
-          bash ./compile.sh
+          docker compose -f packages/pdfium/docker-compose.yml build pdfium-build
+          docker compose -f packages/pdfium/docker-compose.yml run --rm pdfium-build
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4
         with:
           name: pdfium-wasm
           path: |
-            packages/pdfium/build/wasm/pdfium.wasm
-            packages/pdfium/build/wasm/pdfium.js
-            packages/pdfium/build/wasm/pdfium.cjs
-            packages/pdfium/build/wasm/functions.ts
-            packages/pdfium/build/wasm/runtime-methods.ts
+            packages/pdfium/src/vendor/pdfium.wasm
+            packages/pdfium/src/vendor/pdfium.js
+            packages/pdfium/src/vendor/pdfium.cjs
+            packages/pdfium/src/vendor/functions.ts
+            packages/pdfium/src/vendor/runtime-methods.ts
