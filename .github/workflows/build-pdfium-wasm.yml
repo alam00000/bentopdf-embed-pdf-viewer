@@ -19,15 +19,13 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
           df -h
 
-      - name: Make pdfium-src a proper git repo for Docker mount
+      - name: Make pdfium-src a standalone git repo for Docker mount
         run: |
           cd packages/pdfium/pdfium-src
-          if [ -f .git ]; then
-            # Convert submodule .git file to a real .git directory
-            GIT_DIR=$(cat .git | sed 's/gitdir: //')
-            rm .git
-            cp -r "$GIT_DIR" .git
-          fi
+          rm -f .git
+          git init
+          git add -A
+          git commit -m "snapshot" --allow-empty
 
       - name: Build WASM via Docker
         run: |
