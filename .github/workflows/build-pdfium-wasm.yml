@@ -44,7 +44,7 @@ jobs:
           EOF
 
           cd "$GITHUB_WORKSPACE"
-          gclient sync --no-history --shallow --nohooks --deps=builder
+          gclient sync --no-history --shallow --nohooks
           rm .gclient
 
       - name: Install PDFium build deps
