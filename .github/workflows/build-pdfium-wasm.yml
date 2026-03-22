@@ -12,12 +12,22 @@ jobs:
       - name: Checkout embed-pdf-viewer
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
           df -h
+
+      - name: Make pdfium-src a proper git repo for Docker mount
+        run: |
+          cd packages/pdfium/pdfium-src
+          if [ -f .git ]; then
+            # Convert submodule .git file to a real .git directory
+            GIT_DIR=$(cat .git | sed 's/gitdir: //')
+            rm .git
+            cp -r "$GIT_DIR" .git
+          fi
 
       - name: Build WASM via Docker
         run: |
