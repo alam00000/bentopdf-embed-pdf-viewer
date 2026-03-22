@@ -61,6 +61,15 @@ jobs:
           cp -f "$PATCH/build/toolchain/wasm/BUILD.gn" "$SRC/build/toolchain/wasm/BUILD.gn"
           cp -f "$PATCH/core/fxge/BUILD.gn" "$SRC/core/fxge/BUILD.gn"
 
+      - name: Ensure libcxx_hardening target exists
+        run: |
+          COMPILER_GN=packages/pdfium/pdfium-src/build/config/compiler/BUILD.gn
+          for target in libcxx_hardening libcxx_module; do
+            if ! grep -q "\"$target\"" "$COMPILER_GN"; then
+              echo "config(\"$target\") {}" >> "$COMPILER_GN"
+            fi
+          done
+
       - name: Generate build config
         run: |
           cd packages/pdfium/pdfium-src
