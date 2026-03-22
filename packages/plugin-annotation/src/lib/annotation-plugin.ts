@@ -112,6 +112,7 @@ import {
   textMarkupSelectionHandler,
   insertTextSelectionHandler,
   replaceTextSelectionHandler,
+  calloutHandlerFactory,
 } from './handlers';
 import { rectsIntersect, isSidebarAnnotation } from './helpers';
 import { PatchRegistry, TransformContext } from './patching/patch-registry';
@@ -124,6 +125,7 @@ import {
   patchSquare,
   patchFreeText,
   patchStamp,
+  patchCallout,
 } from './patching/patches';
 import {
   getRectCenter,
@@ -154,6 +156,7 @@ export class AnnotationPlugin extends BasePlugin<
   private commitInProgress = new Map<string, boolean>(); // Guard against concurrent commits
 
   private handlerFactories = new Map<PdfAnnotationSubtype, HandlerFactory<any>>();
+  private toolHandlerOverrides = new Map<string, HandlerFactory<any>>();
   private selectionHandlerFactories = new Map<string, SelectionHandlerFactory>();
   private readonly activeTool$ = createBehaviorEmitter<AnnotationActiveToolChangeEvent>();
   private readonly events$ = createBehaviorEmitter<AnnotationEvent>();
@@ -257,6 +260,8 @@ export class AnnotationPlugin extends BasePlugin<
     this.handlerFactories.set(PdfAnnotationSubtype.INK, inkHandlerFactory);
     this.handlerFactories.set(PdfAnnotationSubtype.FREETEXT, freeTextHandlerFactory);
     this.handlerFactories.set(PdfAnnotationSubtype.TEXT, textHandlerFactory);
+
+    this.toolHandlerOverrides.set('callout', calloutHandlerFactory);
   }
 
   private registerSelectionHandlerFactories() {
@@ -600,7 +605,7 @@ export class AnnotationPlugin extends BasePlugin<
 
     for (const tool of this.state.tools) {
       if (!tool.defaults.type) continue;
-      const factory = this.handlerFactories.get(tool.defaults.type);
+      const factory = this.toolHandlerOverrides.get(tool.id) ?? this.handlerFactories.get(tool.defaults.type);
       if (!factory) continue;
 
       const context: HandlerContext<PdfAnnotationObject> = {

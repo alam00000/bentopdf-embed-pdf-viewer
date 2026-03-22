@@ -2154,6 +2154,24 @@ export interface PdfFreeTextAnnoObject extends PdfAnnotationObjectBase {
    * Rectangle Differences (/RD) - inset padding from Rect to the drawn area.
    */
   rectangleDifferences?: PdfRectDifferences;
+  /**
+   * Callout line points (/CL). 2 points = [arrowTip, textBoxEdge],
+   * 3 points = [arrowTip, knee, textBoxEdge]. Only used when
+   * intent is 'FreeTextCallout'.
+   */
+  calloutLine?: Position[];
+  /**
+   * Line ending style at the arrow tip of the callout line (/LE).
+   */
+  lineEnding?: PdfAnnotationLineEnding;
+  /**
+   * Stroke color for the callout line border.
+   */
+  strokeColor?: string;
+  /**
+   * Stroke width for the callout line border.
+   */
+  strokeWidth?: number;
 }
 
 /**

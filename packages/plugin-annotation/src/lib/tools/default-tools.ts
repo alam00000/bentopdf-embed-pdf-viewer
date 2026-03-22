@@ -435,7 +435,8 @@ export const defaultTools = [
   {
     id: 'freeText' as const,
     name: 'Free Text',
-    matchScore: (a) => (a.type === PdfAnnotationSubtype.FREETEXT ? 1 : 0),
+    matchScore: (a) =>
+      a.type === PdfAnnotationSubtype.FREETEXT && a.intent !== 'FreeTextCallout' ? 5 : 0,
     interaction: {
       exclusive: false,
       cursor: 'crosshair',
@@ -469,6 +470,45 @@ export const defaultTools = [
       insertUpright: true,
       editAfterCreate: true,
       selectAfterCreate: true,
+    },
+  },
+  {
+    id: 'callout' as const,
+    name: 'Callout',
+    matchScore: (a) =>
+      a.type === PdfAnnotationSubtype.FREETEXT && a.intent === 'FreeTextCallout' ? 10 : 0,
+    interaction: {
+      exclusive: false,
+      cursor: 'crosshair',
+      isDraggable: true,
+      isResizable: false,
+      isRotatable: false,
+      lockAspectRatio: false,
+    },
+    defaults: {
+      type: PdfAnnotationSubtype.FREETEXT,
+      intent: 'FreeTextCallout',
+      contents: 'Insert text',
+      fontSize: 14,
+      fontColor: '#E44234',
+      fontFamily: PdfStandardFont.Helvetica,
+      textAlign: PdfTextAlignment.Left,
+      verticalAlign: PdfVerticalAlignment.Top,
+      color: '#FFFFFF',
+      backgroundColor: '#FFFFFF',
+      opacity: 1,
+      strokeColor: '#E44234',
+      strokeWidth: 1,
+      lineEnding: PdfAnnotationLineEnding.OpenArrow,
+    },
+    clickBehavior: {
+      enabled: false,
+      defaultSize: { width: 100, height: 40 },
+      defaultContent: 'Insert text',
+    },
+    behavior: {
+      selectAfterCreate: true,
+      editAfterCreate: true,
     },
   },
   {

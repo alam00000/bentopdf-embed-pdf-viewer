@@ -10,3 +10,4 @@ export * from './circle.handler';
 export * from './text-markup.handler';
 export * from './insert-text.handler';
 export * from './replace-text.handler';
+export * from './callout.handler';

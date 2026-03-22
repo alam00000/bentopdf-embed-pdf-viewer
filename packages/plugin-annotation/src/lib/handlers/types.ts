@@ -85,6 +85,10 @@ export interface FreeTextPreviewData {
   textAlign?: PdfTextAlignment;
   verticalAlign?: PdfVerticalAlignment;
   contents?: string;
+  calloutLine?: Position[];
+  lineEnding?: number;
+  strokeColor?: string;
+  strokeWidth?: number;
 }
 
 /**

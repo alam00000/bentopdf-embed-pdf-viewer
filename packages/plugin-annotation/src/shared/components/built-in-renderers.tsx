@@ -28,6 +28,7 @@ import { Polyline } from './annotations/polyline';
 import { Polygon } from './annotations/polygon';
 import { Text } from './annotations/text';
 import { FreeText } from './annotations/free-text';
+import { CalloutLine } from './annotations/callout-line';
 import { Stamp } from './annotations/stamp';
 import { Link } from './annotations/link';
 import { Highlight } from './text-markup/highlight';
@@ -249,6 +250,114 @@ export const builtInRenderers: BoxedAnnotationRenderer[] = [
       />
     ),
     interactionDefaults: { isDraggable: false, isResizable: false, isRotatable: false },
+  }),
+
+  // --- FreeText Callout ---
+
+  createRenderer<PdfFreeTextAnnoObject>({
+    id: 'callout',
+    matches: (a): a is PdfFreeTextAnnoObject =>
+      a.type === PdfAnnotationSubtype.FREETEXT &&
+      a.intent === 'FreeTextCallout' &&
+      !!a.calloutLine &&
+      a.calloutLine.length >= 2,
+    render: ({
+      annotation,
+      currentObject,
+      isSelected,
+      isEditing,
+      scale,
+      pageIndex,
+      documentId,
+      onClick,
+      appearanceActive,
+    }) => {
+      // Compute inner text box from outer rect + rectangleDifferences
+      const rd = currentObject.rectangleDifferences;
+      const outerRect = currentObject.rect;
+      const innerRect = rd
+        ? {
+            origin: {
+              x: outerRect.origin.x + rd.left,
+              y: outerRect.origin.y + rd.top,
+            },
+            size: {
+              width: outerRect.size.width - rd.left - rd.right,
+              height: outerRect.size.height - rd.top - rd.bottom,
+            },
+          }
+        : outerRect;
+
+      const calloutStrokeColor = currentObject.strokeColor ?? currentObject.fontColor ?? '#000000';
+      const calloutStrokeWidth = currentObject.strokeWidth ?? 1;
+
+      return (
+        <Fragment>
+          <CalloutLine
+            rect={outerRect}
+            calloutLine={currentObject.calloutLine!}
+            strokeColor={calloutStrokeColor}
+            strokeWidth={calloutStrokeWidth}
+            lineEnding={currentObject.lineEnding}
+            scale={scale}
+            isSelected={isSelected}
+            onClick={onClick}
+            appearanceActive={appearanceActive}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              left: rd ? rd.left * scale : 0,
+              top: rd ? rd.top * scale : 0,
+              width: innerRect.size.width * scale,
+              height: innerRect.size.height * scale,
+              zIndex: 2,
+              boxSizing: 'border-box',
+              border: appearanceActive ? 'none' : `${calloutStrokeWidth * scale}px solid ${calloutStrokeColor}`,
+            }}
+          >
+            <FreeText
+              documentId={documentId}
+              isSelected={isSelected}
+              isEditing={isEditing}
+              annotation={{
+                ...annotation,
+                object: { ...currentObject, rect: innerRect, color: 'transparent', backgroundColor: 'transparent' },
+              }}
+              pageIndex={pageIndex}
+              scale={scale}
+              onClick={onClick}
+              appearanceActive={appearanceActive}
+            />
+          </div>
+        </Fragment>
+      );
+    },
+    vertexConfig: {
+      extractVertices: (a) => {
+        const cl = a.calloutLine;
+        if (!cl || cl.length < 2) return [];
+        // Only expose arrow tip and knee as draggable vertices.
+        // The text box edge point (index 2) is auto-computed.
+        return cl.length >= 3 ? [cl[0], cl[1]] : [cl[0]];
+      },
+      transformAnnotation: (a, vertices) => {
+        const cl = a.calloutLine;
+        if (!cl || cl.length < 2) return { ...a, calloutLine: vertices };
+        // Preserve the text box edge point, only update arrow tip + knee
+        const textBoxEdge = cl[cl.length - 1];
+        return {
+          ...a,
+          calloutLine:
+            vertices.length >= 2
+              ? [vertices[0], vertices[1], textBoxEdge]
+              : [vertices[0], textBoxEdge],
+        };
+      },
+    },
+    interactionDefaults: { isDraggable: true, isResizable: false, isRotatable: false },
+    isDraggable: (toolDraggable, { isEditing }) => toolDraggable && !isEditing,
+    onDoubleClick: (id, setEditingId) => setEditingId(id),
   }),
 
   // --- FreeText ---

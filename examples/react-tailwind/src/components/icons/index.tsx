@@ -871,6 +871,28 @@ export function CloudIcon({ className, title, style }: IconProps) {
   );
 }
 
+export function CalloutIcon({ className, title, style }: IconProps) {
+  return (
+    <svg
+      className={className}
+      style={style}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={!title}
+      role={title ? 'img' : 'presentation'}
+    >
+      {title ? <title>{title}</title> : null}
+      <line x1="9" y1="12" x2="3" y2="3" />
+      <polyline points="3,7 3,3 7,3" />
+      <rect x="9" y="12" width="13" height="10" rx="0" />
+    </svg>
+  );
+}
+
 export function SquigglyIcon({ className, title, style }: IconProps) {
   return (
     <svg

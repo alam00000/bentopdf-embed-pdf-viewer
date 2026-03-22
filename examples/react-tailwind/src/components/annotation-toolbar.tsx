@@ -13,6 +13,7 @@ import {
   SquareIcon,
   PolygonIcon,
   CloudIcon,
+  CalloutIcon,
   PolylineIcon,
   LineIcon,
   ArrowIcon,
@@ -242,6 +243,15 @@ export function AnnotationToolbar({ documentId }: AnnotationToolbarProps) {
         title="Draw Arrow"
       >
         <ArrowIcon className="h-4 w-4" style={{ color: toolColors.lineArrow?.primaryColor }} />
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => toggleTool('callout')}
+        isActive={activeTool?.id === 'callout'}
+        aria-label="Callout annotation"
+        title="Draw Callout"
+      >
+        <CalloutIcon className="h-4 w-4" style={{ color: toolColors.callout?.primaryColor }} />
       </ToolbarButton>
 
       {/* Divider */}

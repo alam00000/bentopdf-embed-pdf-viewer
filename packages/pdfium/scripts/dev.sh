@@ -48,6 +48,15 @@ cp -f "$PDFIUM/build/patch/build/config/BUILDCONFIG.gn" \
 cp -f "$PDFIUM/build/patch/build/toolchain/wasm/BUILD.gn" \
       "$SRC/build/toolchain/wasm/BUILD.gn"
 
+cp -f "$PDFIUM/build/patch/fpdfsdk/fpdf_annot.cpp" \
+      "$SRC/fpdfsdk/fpdf_annot.cpp"
+
+cp -f "$PDFIUM/build/patch/public/fpdf_annot.h" \
+      "$SRC/public/fpdf_annot.h"
+
+cp -f "$PDFIUM/build/patch/constants/annotation_common.h" \
+      "$SRC/constants/annotation_common.h"
+
 
 #if command -v mountpoint >/dev/null 2>&1 && mountpoint -q "$OUT"; then
 #  echo "⚠️ $OUT is a mount — clearing contents only"

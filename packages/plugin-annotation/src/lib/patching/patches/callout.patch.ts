@@ -7,21 +7,35 @@ import {
   baseResizeScaling,
   basePropertyRotationChanges,
 } from '../base-patch';
-import { patchCallout } from './callout.patch';
 
-export const patchFreeText: PatchFunction<PdfFreeTextAnnoObject> = (orig, ctx) => {
-  if (orig.calloutLine && orig.calloutLine.length >= 2) {
-    return patchCallout(orig, ctx);
-  }
-
+export const patchCallout: PatchFunction<PdfFreeTextAnnoObject> = (orig, ctx) => {
   switch (ctx.type) {
-    case 'move':
+    case 'move': {
       if (!ctx.changes.rect) return ctx.changes;
-      return baseMoveChanges(orig, ctx.changes.rect).rects;
+      const { dx, dy, rects } = baseMoveChanges(orig, ctx.changes.rect);
 
-    case 'resize':
+      const calloutLine = orig.calloutLine?.map((p) => ({
+        x: p.x + dx,
+        y: p.y + dy,
+      }));
+
+      return {
+        ...rects,
+        ...(calloutLine && { calloutLine }),
+      };
+    }
+
+    case 'resize': {
       if (!ctx.changes.rect) return ctx.changes;
       return baseResizeScaling(orig, ctx.changes.rect, ctx.metadata).rects;
+    }
+
+    case 'vertex-edit': {
+      if (ctx.changes.calloutLine) {
+        return { calloutLine: ctx.changes.calloutLine };
+      }
+      return ctx.changes;
+    }
 
     case 'rotate':
       return baseRotateChanges(orig, ctx) ?? ctx.changes;

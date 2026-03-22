@@ -46,6 +46,15 @@ cp -f "$PDFIUM/build/patch/build/config/BUILDCONFIG.gn" \
 cp -f "$PDFIUM/build/patch/build/toolchain/wasm/BUILD.gn" \
       "$SRC/build/toolchain/wasm/BUILD.gn"
 
+cp -f "$PDFIUM/build/patch/fpdfsdk/fpdf_annot.cpp" \
+      "$SRC/fpdfsdk/fpdf_annot.cpp"
+
+cp -f "$PDFIUM/build/patch/public/fpdf_annot.h" \
+      "$SRC/public/fpdf_annot.h"
+
+cp -f "$PDFIUM/build/patch/constants/annotation_common.h" \
+      "$SRC/constants/annotation_common.h"
+
 ###############################################################################
 # helper – same exporter as in dev.sh
 ###############################################################################

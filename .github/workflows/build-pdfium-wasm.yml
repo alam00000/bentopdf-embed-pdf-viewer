@@ -61,8 +61,10 @@ jobs:
           SRC=packages/pdfium/pdfium-src
           PATCH=packages/pdfium/build/patch
 
+          cp -f "$PATCH/BUILD.gn" "$SRC/BUILD.gn"
           cp -f "$PATCH/build/config/BUILDCONFIG.gn" "$SRC/build/config/BUILDCONFIG.gn"
           cp -f "$PATCH/build/toolchain/wasm/BUILD.gn" "$SRC/build/toolchain/wasm/BUILD.gn"
+          cp -f "$PATCH/core/fxge/BUILD.gn" "$SRC/core/fxge/BUILD.gn"
           cp -f "$PATCH/fpdfsdk/fpdf_annot.cpp" "$SRC/fpdfsdk/fpdf_annot.cpp"
           cp -f "$PATCH/public/fpdf_annot.h" "$SRC/public/fpdf_annot.h"
           cp -f "$PATCH/constants/annotation_common.h" "$SRC/constants/annotation_common.h"

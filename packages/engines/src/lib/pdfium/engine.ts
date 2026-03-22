@@ -2630,6 +2630,18 @@ export class PdfiumNative implements IPdfiumExecutor {
 
     this.setRectangleDifferences(annotationPtr, annotation.rectangleDifferences);
 
+    if (annotation.calloutLine && annotation.calloutLine.length >= 2) {
+      try {
+        this.setCalloutLine(doc, page, annotationPtr, annotation.calloutLine);
+      } catch {
+        // EPDFAnnot_SetCalloutLine not available in current WASM binary
+      }
+    }
+
+    if (annotation.lineEnding !== undefined) {
+      this.setLineEndings(annotationPtr, annotation.lineEnding, PdfAnnotationLineEnding.None);
+    }
+
     // Apply base annotation properties (author, contents, dates, flags, custom, IRT, RT)
     return this.applyBaseAnnotationProperties(doc, page, pagePtr, annotationPtr, annotation);
   }
@@ -5415,6 +5427,61 @@ export class PdfiumNative implements IPdfiumExecutor {
     return !!this.pdfiumModule.EPDFAnnot_SetLineEndings(annotationPtr, start, end);
   }
 
+  private getCalloutLine(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotationPtr: number,
+  ): Position[] | undefined {
+    let count: number;
+    try {
+      count = this.pdfiumModule.EPDFAnnot_GetCalloutLine(annotationPtr, 0, 0);
+    } catch {
+      return undefined;
+    }
+    if (count === 0) return undefined;
+
+    const FS_POINTF_SIZE = 8;
+    const buf = this.memoryManager.malloc(count * FS_POINTF_SIZE);
+    this.pdfiumModule.EPDFAnnot_GetCalloutLine(annotationPtr, buf, count);
+
+    const points: Position[] = [];
+    for (let i = 0; i < count; i++) {
+      const px = this.pdfiumModule.pdfium.getValue(buf + i * FS_POINTF_SIZE, 'float');
+      const py = this.pdfiumModule.pdfium.getValue(buf + i * FS_POINTF_SIZE + 4, 'float');
+      points.push(this.convertPagePointToDevicePoint(doc, page, { x: px, y: py }));
+    }
+    this.memoryManager.free(buf);
+    return points;
+  }
+
+  private setCalloutLine(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotationPtr: number,
+    points: Position[],
+  ): boolean {
+    const pdf = this.pdfiumModule.pdfium;
+    const FS_POINTF_SIZE = 8;
+    const buf = this.memoryManager.malloc(FS_POINTF_SIZE * points.length);
+    points.forEach((v, i) => {
+      const pagePt = this.convertDevicePointToPagePoint(doc, page, v);
+      pdf.setValue(buf + i * FS_POINTF_SIZE + 0, pagePt.x, 'float');
+      pdf.setValue(buf + i * FS_POINTF_SIZE + 4, pagePt.y, 'float');
+    });
+    const ok = this.pdfiumModule.EPDFAnnot_SetCalloutLine(annotationPtr, buf, points.length);
+    this.memoryManager.free(buf);
+    return ok;
+  }
+
+  private getFreeTextLineEnding(annotationPtr: number): PdfAnnotationLineEnding | undefined {
+    const le = this.getLineEndings(annotationPtr);
+    if (!le) return undefined;
+    if (le.start === PdfAnnotationLineEnding.None && le.end === PdfAnnotationLineEnding.None) {
+      return undefined;
+    }
+    return le.start;
+  }
+
   /**
    * Get the start and end points of a LINE / POLYLINE annot.
    * @param doc - pdf document object
@@ -6045,6 +6112,8 @@ export class PdfiumNative implements IPdfiumExecutor {
     const opacity = this.getAnnotationOpacity(annotationPtr);
     const richContent = this.getAnnotRichContent(annotationPtr);
     const rd = this.getRectangleDifferences(annotationPtr);
+    const calloutLine = this.getCalloutLine(doc, page, annotationPtr);
+    const lineEnding = this.getFreeTextLineEnding(annotationPtr);
 
     return {
       pageIndex: page.index,
@@ -6069,6 +6138,8 @@ export class PdfiumNative implements IPdfiumExecutor {
           bottom: rd.bottom,
         },
       }),
+      ...(calloutLine && { calloutLine }),
+      ...(lineEnding !== undefined && { lineEnding }),
       ...this.readBaseAnnotationProperties(doc, page, annotationPtr),
     };
   }
