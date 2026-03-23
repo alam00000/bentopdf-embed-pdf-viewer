@@ -1,0 +1,136 @@
+[10:41:47] >>> Build started
+[10:41:47]     Skipping gclient sync (toolchain already present)
+[10:41:47] >>> Patching PDFium build files...
+[10:41:47]     Skipping gn gen (build.ninja already exists)
+[10:41:47] >>> ninja compile (jobs=4) - this is the long step...
+ninja: Entering directory `/workspace/packages/pdfium/pdfium-src/out/wasm'
+[0/1] Regenerating ninja files
+[1/11] CXX obj/core/fpdfdoc/fpdfdoc/cpdf_annotlist.o
+[2/11] CXX obj/core/fpdfdoc/fpdfdoc/cpdf_bafontmap.o
+[3/11] CXX obj/core/fpdfdoc/fpdfdoc/cpdf_annot.o
+[4/11] CXX obj/core/fpdfdoc/fpdfdoc/cpdf_generateap.o
+[5/11] CXX obj/fpdfsdk/fpdfsdk/cpdfsdk_baannot.o
+[6/11] CXX obj/fpdfsdk/fpdfsdk/cpdfsdk_widget.o
+[7/11] CXX obj/fpdfsdk/fpdfsdk/fpdf_flatten.o
+[8/11] CXX obj/fpdfsdk/fpdfsdk/fpdf_annot.o
+[9/11] CXX obj/fpdfsdk/fpdfsdk/fpdf_ppo.o
+[10/11] AR obj/libpdfium.a
+[10:42:22]     ninja done
+[10:42:22] >>> Generating exports...
+[10:42:23]     gen_exports done
+[10:42:23] >>> Compiling ESM bundle...
+ports:INFO: retrieving port: zlib from https://github.com/madler/zlib/archive/refs/tags/v1.2.13.tar.gz
+ports:INFO: unpacking port: zlib
+cache:INFO: generating port: sysroot/lib/wasm32-emscripten/libz.a... (this will be cached in "/emsdk/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten/libz.a" for subsequent builds)
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/adler32.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/adler32.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/compress.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/compress.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/crc32.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/crc32.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/deflate.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/deflate.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/gzclose.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/gzclose.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/gzlib.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/gzlib.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/gzread.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/gzread.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/gzwrite.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/gzwrite.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/infback.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/infback.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/inffast.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/inffast.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/inflate.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/inflate.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/inftrees.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/inftrees.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/trees.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/trees.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/uncompr.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/uncompr.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+ /emsdk/upstream/emscripten/emcc -c /emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13/zutil.c -o /emsdk/upstream/emscripten/cache/ports-builds/zlib/zutil.c.o -g -sSTRICT -Werror -O2 -I/emsdk/upstream/emscripten/cache/ports/zlib/zlib-1.2.13 -Wno-deprecated-non-prototype
+system_libs:INFO: compiled 15 inputs in 0.82s
+cache:INFO:  - ok
+ "/emsdk/upstream/bin/clang++" -target wasm32-unknown-emscripten -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr --sysroot=/emsdk/upstream/emscripten/cache/sysroot -DEMSCRIPTEN -Xclang -iwithsysroot/include/fakesdl -Xclang -iwithsysroot/include/compat -v -I/workspace/packages/pdfium/pdfium-src/public -std=c++11 -fexceptions -Wall ./code/cpp/filewriter.cpp -c -o /tmp/emscripten_temp_rrlvynhq/filewriter_0.o
+clang version 20.0.0git (https:/github.com/llvm/llvm-project f52b89561f2d929c0c6f37fd818229fbcad3b26c)
+Target: wasm32-unknown-emscripten
+Thread model: posix
+InstalledDir: /emsdk/upstream/bin
+ (in-process)
+ "/emsdk/upstream/bin/clang-20" -cc1 -triple wasm32-unknown-emscripten -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name filewriter.cpp -mrelocation-model static -mframe-pointer=none -ffp-contract=on -fno-rounding-math -mconstructor-aliases -target-cpu generic -fvisibility=hidden -debugger-tuning=gdb -fdebug-compilation-dir=/workspace/packages/pdfium/build -v -fcoverage-compilation-dir=/workspace/packages/pdfium/build -resource-dir /emsdk/upstream/lib/clang/20 -D EMSCRIPTEN -I /workspace/packages/pdfium/pdfium-src/public -isysroot /emsdk/upstream/emscripten/cache/sysroot -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1 -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1 -internal-isystem /emsdk/upstream/lib/clang/20/include -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include -Wall -std=c++11 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -iwithsysroot/include/fakesdl -iwithsysroot/include/compat -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr -o /tmp/emscripten_temp_rrlvynhq/filewriter_0.o -x c++ ./code/cpp/filewriter.cpp
+clang -cc1 version 20.0.0git based upon LLVM 20.0.0git default target x86_64-unknown-linux-gnu
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1"
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten"
+#include "..." search starts here:
+#include <...> search starts here:
+ /workspace/packages/pdfium/pdfium-src/public
+ /emsdk/upstream/emscripten/cache/sysroot/include/fakesdl
+ /emsdk/upstream/emscripten/cache/sysroot/include/compat
+ /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
+ /emsdk/upstream/lib/clang/20/include
+ /emsdk/upstream/emscripten/cache/sysroot/include
+End of search list.
+ "/emsdk/upstream/bin/clang++" -target wasm32-unknown-emscripten -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr --sysroot=/emsdk/upstream/emscripten/cache/sysroot -DEMSCRIPTEN -Xclang -iwithsysroot/include/fakesdl -Xclang -iwithsysroot/include/compat -v -I/workspace/packages/pdfium/pdfium-src/public -std=c++11 -fexceptions -Wall ./code/cpp/main.cpp -c -o /tmp/emscripten_temp_rrlvynhq/main_1.o
+clang version 20.0.0git (https:/github.com/llvm/llvm-project f52b89561f2d929c0c6f37fd818229fbcad3b26c)
+Target: wasm32-unknown-emscripten
+Thread model: posix
+InstalledDir: /emsdk/upstream/bin
+ (in-process)
+ "/emsdk/upstream/bin/clang-20" -cc1 -triple wasm32-unknown-emscripten -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name main.cpp -mrelocation-model static -mframe-pointer=none -ffp-contract=on -fno-rounding-math -mconstructor-aliases -target-cpu generic -fvisibility=hidden -debugger-tuning=gdb -fdebug-compilation-dir=/workspace/packages/pdfium/build -v -fcoverage-compilation-dir=/workspace/packages/pdfium/build -resource-dir /emsdk/upstream/lib/clang/20 -D EMSCRIPTEN -I /workspace/packages/pdfium/pdfium-src/public -isysroot /emsdk/upstream/emscripten/cache/sysroot -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1 -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1 -internal-isystem /emsdk/upstream/lib/clang/20/include -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include -Wall -std=c++11 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -iwithsysroot/include/fakesdl -iwithsysroot/include/compat -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr -o /tmp/emscripten_temp_rrlvynhq/main_1.o -x c++ ./code/cpp/main.cpp
+clang -cc1 version 20.0.0git based upon LLVM 20.0.0git default target x86_64-unknown-linux-gnu
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1"
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten"
+#include "..." search starts here:
+#include <...> search starts here:
+ /workspace/packages/pdfium/pdfium-src/public
+ /emsdk/upstream/emscripten/cache/sysroot/include/fakesdl
+ /emsdk/upstream/emscripten/cache/sysroot/include/compat
+ /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
+ /emsdk/upstream/lib/clang/20/include
+ /emsdk/upstream/emscripten/cache/sysroot/include
+End of search list.
+ /emsdk/upstream/bin/clang --version
+cache:INFO: generating system asset: symbol_lists/053310eb05c85bb0293849dddc197f9cb7a38200.json... (this will be cached in "/emsdk/upstream/emscripten/cache/symbol_lists/053310eb05c85bb0293849dddc197f9cb7a38200.json" for subsequent builds)
+ /emsdk/node/20.18.0_64bit/bin/node /emsdk/upstream/emscripten/src/compiler.mjs /tmp/tmpu8nqshs2.json --symbols-only
+cache:INFO:  - ok
+ /emsdk/upstream/bin/wasm-ld @/tmp/emscripten_a7b633vl.rsp.utf-8
+ /emsdk/upstream/bin/llvm-objcopy ./wasm/pdfium.wasm ./wasm/pdfium.wasm --remove-section=.debug* --remove-section=producers
+ /emsdk/upstream/bin/wasm-emscripten-finalize --dyncalls-i64 --pass-arg=legalize-js-interface-exported-helpers ./wasm/pdfium.wasm -o ./wasm/pdfium.wasm --detect-features
+ /emsdk/node/20.18.0_64bit/bin/node /emsdk/upstream/emscripten/src/compiler.mjs /tmp/tmp82zruaxe.json
+[10:42:39] >>> Compiling CJS bundle...
+ "/emsdk/upstream/bin/clang++" -target wasm32-unknown-emscripten -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr --sysroot=/emsdk/upstream/emscripten/cache/sysroot -DEMSCRIPTEN -Xclang -iwithsysroot/include/fakesdl -Xclang -iwithsysroot/include/compat -v -I/workspace/packages/pdfium/pdfium-src/public -std=c++11 -fexceptions -Wall ./code/cpp/filewriter.cpp -c -o /tmp/emscripten_temp_pcr30mqo/filewriter_0.o
+clang version 20.0.0git (https:/github.com/llvm/llvm-project f52b89561f2d929c0c6f37fd818229fbcad3b26c)
+Target: wasm32-unknown-emscripten
+Thread model: posix
+InstalledDir: /emsdk/upstream/bin
+ (in-process)
+ "/emsdk/upstream/bin/clang-20" -cc1 -triple wasm32-unknown-emscripten -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name filewriter.cpp -mrelocation-model static -mframe-pointer=none -ffp-contract=on -fno-rounding-math -mconstructor-aliases -target-cpu generic -fvisibility=hidden -debugger-tuning=gdb -fdebug-compilation-dir=/workspace/packages/pdfium/build -v -fcoverage-compilation-dir=/workspace/packages/pdfium/build -resource-dir /emsdk/upstream/lib/clang/20 -D EMSCRIPTEN -I /workspace/packages/pdfium/pdfium-src/public -isysroot /emsdk/upstream/emscripten/cache/sysroot -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1 -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1 -internal-isystem /emsdk/upstream/lib/clang/20/include -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include -Wall -std=c++11 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -iwithsysroot/include/fakesdl -iwithsysroot/include/compat -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr -o /tmp/emscripten_temp_pcr30mqo/filewriter_0.o -x c++ ./code/cpp/filewriter.cpp
+clang -cc1 version 20.0.0git based upon LLVM 20.0.0git default target x86_64-unknown-linux-gnu
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1"
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten"
+#include "..." search starts here:
+#include <...> search starts here:
+ /workspace/packages/pdfium/pdfium-src/public
+ /emsdk/upstream/emscripten/cache/sysroot/include/fakesdl
+ /emsdk/upstream/emscripten/cache/sysroot/include/compat
+ /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
+ /emsdk/upstream/lib/clang/20/include
+ /emsdk/upstream/emscripten/cache/sysroot/include
+End of search list.
+ "/emsdk/upstream/bin/clang++" -target wasm32-unknown-emscripten -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr --sysroot=/emsdk/upstream/emscripten/cache/sysroot -DEMSCRIPTEN -Xclang -iwithsysroot/include/fakesdl -Xclang -iwithsysroot/include/compat -v -I/workspace/packages/pdfium/pdfium-src/public -std=c++11 -fexceptions -Wall ./code/cpp/main.cpp -c -o /tmp/emscripten_temp_pcr30mqo/main_1.o
+clang version 20.0.0git (https:/github.com/llvm/llvm-project f52b89561f2d929c0c6f37fd818229fbcad3b26c)
+Target: wasm32-unknown-emscripten
+Thread model: posix
+InstalledDir: /emsdk/upstream/bin
+ (in-process)
+ "/emsdk/upstream/bin/clang-20" -cc1 -triple wasm32-unknown-emscripten -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name main.cpp -mrelocation-model static -mframe-pointer=none -ffp-contract=on -fno-rounding-math -mconstructor-aliases -target-cpu generic -fvisibility=hidden -debugger-tuning=gdb -fdebug-compilation-dir=/workspace/packages/pdfium/build -v -fcoverage-compilation-dir=/workspace/packages/pdfium/build -resource-dir /emsdk/upstream/lib/clang/20 -D EMSCRIPTEN -I /workspace/packages/pdfium/pdfium-src/public -isysroot /emsdk/upstream/emscripten/cache/sysroot -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1 -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1 -internal-isystem /emsdk/upstream/lib/clang/20/include -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten -internal-isystem /emsdk/upstream/emscripten/cache/sysroot/include -Wall -std=c++11 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -iwithsysroot/include/fakesdl -iwithsysroot/include/compat -mllvm -combiner-global-alias-analysis=false -mllvm -enable-emscripten-cxx-exceptions -mllvm -enable-emscripten-sjlj -mllvm -disable-lsr -o /tmp/emscripten_temp_pcr30mqo/main_1.o -x c++ ./code/cpp/main.cpp
+clang -cc1 version 20.0.0git based upon LLVM 20.0.0git default target x86_64-unknown-linux-gnu
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten/c++/v1"
+ignoring nonexistent directory "/emsdk/upstream/emscripten/cache/sysroot/include/wasm32-emscripten"
+#include "..." search starts here:
+#include <...> search starts here:
+ /workspace/packages/pdfium/pdfium-src/public
+ /emsdk/upstream/emscripten/cache/sysroot/include/fakesdl
+ /emsdk/upstream/emscripten/cache/sysroot/include/compat
+ /emsdk/upstream/emscripten/cache/sysroot/include/c++/v1
+ /emsdk/upstream/lib/clang/20/include
+ /emsdk/upstream/emscripten/cache/sysroot/include
+End of search list.
+ /emsdk/upstream/bin/clang --version
+cache:INFO: generating system asset: symbol_lists/79bb9b314e3b5a6e750f5181f52d561dc016ea43.json... (this will be cached in "/emsdk/upstream/emscripten/cache/symbol_lists/79bb9b314e3b5a6e750f5181f52d561dc016ea43.json" for subsequent builds)
+ /emsdk/node/20.18.0_64bit/bin/node /emsdk/upstream/emscripten/src/compiler.mjs /tmp/tmp100n475b.json --symbols-only
+cache:INFO:  - ok
+ /emsdk/upstream/bin/wasm-ld @/tmp/emscripten_ef1z92ty.rsp.utf-8
+ /emsdk/upstream/bin/llvm-objcopy ./wasm/pdfium.wasm ./wasm/pdfium.wasm --remove-section=.debug* --remove-section=producers
+ /emsdk/upstream/bin/wasm-emscripten-finalize --dyncalls-i64 --pass-arg=legalize-js-interface-exported-helpers ./wasm/pdfium.wasm -o ./wasm/pdfium.wasm --detect-features
+ /emsdk/node/20.18.0_64bit/bin/node /emsdk/upstream/emscripten/src/compiler.mjs /tmp/tmp7ggl6z7e.json
+[10:42:43] >>> Done - pdfium.wasm (ESM + CJS) ready
+[10:42:43]     Full log saved to /workspace/packages/pdfium/build.log

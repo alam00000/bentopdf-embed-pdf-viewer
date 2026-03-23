@@ -49,9 +49,12 @@ export async function createPdfiumEngine(
   wasmUrl: string,
   options?: CreatePdfiumEngineOptions,
 ): Promise<PdfEngine<Blob>> {
+  console.log('[ENGINE-DEBUG] createPdfiumEngine fetching WASM from:', wasmUrl);
   const response = await fetch(wasmUrl);
   const wasmBinary = await response.arrayBuffer();
+  console.log('[ENGINE-DEBUG] WASM fetched, size:', wasmBinary.byteLength, 'initializing...');
   const wasmModule = await init({ wasmBinary });
+  console.log('[ENGINE-DEBUG] WASM initialized successfully');
 
   // Create the "dumb" executor (initializes PDFium in constructor)
   const native = new PdfiumNative(wasmModule, {

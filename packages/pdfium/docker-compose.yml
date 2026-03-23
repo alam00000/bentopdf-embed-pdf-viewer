@@ -21,10 +21,12 @@ services:
       - pdfium-build-cache:/workspace/packages/pdfium/pdfium-src/out/wasm
     environment:
       - TZ=Etc/UTC
+      - GCLIENT_SUPPRESS_GIT_VERSION_WARNING=1
+      - SHLVL=1
     tty: true
     stdin_open: true
-    mem_limit: 8g
-    memswap_limit: 10g
+    mem_limit: 12g
+    memswap_limit: 16g
 
   # ────────────────────────────
   # CI / release build container

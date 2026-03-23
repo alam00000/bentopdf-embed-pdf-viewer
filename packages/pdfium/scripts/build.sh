@@ -1,22 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
-set -x
 
 ROOT=/workspace
 SRC=$ROOT/packages/pdfium/pdfium-src
 OUT=$SRC/out/wasm
 PDFIUM=$ROOT/packages/pdfium
+LOG=$PDFIUM/build.log
 
 mkdir -p $OUT
 
 export ROOT SRC OUT PDFIUM
 export PATH="$HOME/.cargo/bin:$PATH"
 
+step() { echo "[$(date '+%H:%M:%S')] >>> $*" | tee -a "$LOG"; }
+log()  { echo "[$(date '+%H:%M:%S')]     $*" | tee -a "$LOG"; }
+
+: > "$LOG"   # reset log each run
+step "Build started"
+
 ###############################################################################
-# step 0 – make sure tool-chain & GN args exist (same logic as dev.sh)
+# step 0 - make sure tool-chain & GN args exist (same logic as dev.sh)
 ###############################################################################
 if [[ ! -d "$SRC/third_party/llvm-build" ]]; then
-  echo "⏬  First-time gclient sync…"
+  step "gclient sync (first time - may take 10-30 min)..."
   cat > "$ROOT/.gclient" <<'EOF'
 solutions = [
   { "name": "packages/pdfium/pdfium-src",
@@ -27,19 +33,17 @@ solutions = [
   },
 ]
 EOF
-  ( cd "$SRC" && gclient sync --no-history --shallow --nohooks --deps=builder )
+  ( cd "$SRC" && gclient sync --no-history --shallow --nohooks --deps=builder ) 2>&1 | tee -a "$LOG"
   rm "$ROOT/.gclient"
-fi
-
-if [[ ! -f "$OUT/args.gn" ]]; then
-  gn gen "$OUT" --root "$SRC" --args='is_debug=false treat_warnings_as_errors=false pdf_use_skia=false pdf_enable_xfa=false pdf_enable_v8=false is_component_build=false clang_use_chrome_plugins=false pdf_is_standalone=true use_debug_fission=false use_custom_libcxx=false use_sysroot=false pdf_is_complete_lib=true pdf_use_partition_alloc=false is_clang=false symbol_level=0'
-  { echo 'target_os="wasm"'; echo 'target_cpu="wasm"'; } >> "$OUT/args.gn"
+  log "gclient sync done"
+else
+  log "Skipping gclient sync (toolchain already present)"
 fi
 
 ###############################################################################
-# 0.5 Apply our local build-system patches (always, they’re tiny)
+# 0.5 Apply our local build-system patches (always, before gn gen)
 ###############################################################################
-echo "🔧  Patching PDFium build files…"
+step "Patching PDFium build files..."
 cp -f "$PDFIUM/build/patch/build/config/BUILDCONFIG.gn" \
       "$SRC/build/config/BUILDCONFIG.gn"
 
@@ -55,8 +59,20 @@ cp -f "$PDFIUM/build/patch/public/fpdf_annot.h" \
 cp -f "$PDFIUM/build/patch/constants/annotation_common.h" \
       "$SRC/constants/annotation_common.h"
 
+cp -f "$PDFIUM/build/patch/third_party/libpng/visibility.gni" \
+      "$SRC/third_party/libpng/visibility.gni"
+
+if [[ ! -f "$OUT/build.ninja" ]]; then
+  step "gn gen (configuring wasm build)..."
+  ( cd "$SRC" && gn gen out/wasm \
+      --args='is_debug=false treat_warnings_as_errors=false pdf_use_skia=false pdf_enable_xfa=false pdf_enable_v8=false is_component_build=false clang_use_chrome_plugins=false pdf_is_standalone=true use_debug_fission=false use_custom_libcxx=false use_sysroot=false pdf_is_complete_lib=true pdf_use_partition_alloc=false is_clang=false symbol_level=0 target_os="wasm" target_cpu="wasm"' ) 2>&1 | tee -a "$LOG"
+  log "gn gen done"
+else
+  log "Skipping gn gen (build.ninja already exists)"
+fi
+
 ###############################################################################
-# helper – same exporter as in dev.sh
+# helper - same exporter as in dev.sh
 ###############################################################################
 gen_exports() {
   local WS=$ROOT/packages/pdfium/build/wasm
@@ -79,14 +95,21 @@ cd "$SRC"
 ###############################################################################
 # real build (no watcher)
 ###############################################################################
-echo "🛠  Building pdfium (once)…"
-ninja -C "$OUT" pdfium -v
+step "ninja compile (jobs=${NINJA_JOBS:-4}) - this is the long step..."
+ninja -j${NINJA_JOBS:-4} -C "$OUT" pdfium 2>&1 | tee -a "$LOG"
+log "ninja done"
+
+step "Generating exports..."
 gen_exports
+log "gen_exports done"
 
 cd "$PDFIUM/build"
-bash ./compile.esm.sh   # → pdfium.js runtime-methods.ts functions.ts
-bash ./compile.sh       # → pdfium.cjs etc.
+step "Compiling ESM bundle..."
+bash ./compile.esm.sh 2>&1 | tee -a "$LOG"
+step "Compiling CJS bundle..."
+bash ./compile.sh 2>&1 | tee -a "$LOG"
 
 cp -f ./wasm/{runtime-methods.ts,functions.ts,pdfium.wasm,pdfium.js,pdfium.cjs} "$PDFIUM/src/vendor/"
 
-echo "✅  pdfium.wasm (ESM + CJS) ready"
+step "Done - pdfium.wasm (ESM + CJS) ready"
+log "Full log saved to $LOG"

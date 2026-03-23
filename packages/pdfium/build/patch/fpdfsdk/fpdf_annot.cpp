@@ -30,6 +30,7 @@
 #include "core/fpdfapi/parser/cpdf_number.h"
 #include "core/fpdfapi/parser/cpdf_reference.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
+#include "core/fpdfapi/parser/cpdf_stream_acc.h"
 #include "core/fpdfapi/parser/cpdf_string.h"
 #include "core/fpdfapi/parser/fpdf_parser_utility.h"
 #include "core/fpdfdoc/cpdf_annot.h"
@@ -832,6 +833,286 @@ static bool AccumulateSingleImageOnly(CPDF_Form* form,
   }
   return true;
 }
+
+struct CalloutRect {
+  float x0, y0, x1, y1;
+  void Include(float x, float y) {
+    x0 = std::min(x0, x);
+    y0 = std::min(y0, y);
+    x1 = std::max(x1, x);
+    y1 = std::max(y1, y);
+  }
+  void Inflate(float d) { x0 -= d; y0 -= d; x1 += d; y1 += d; }
+};
+
+void COFmtF(fxcrt::ostringstream& s, float v) {
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%g", v);
+  s << buf;
+}
+
+void COFmtPt(fxcrt::ostringstream& s, float x, float y) {
+  COFmtF(s, x); s << ' '; COFmtF(s, y);
+}
+
+void COSetStroke(fxcrt::ostringstream& s, int cc, const float* cv) {
+  if (cc == 1) { COFmtF(s, cv[0]); s << " G\n"; }
+  else if (cc == 3) { COFmtF(s, cv[0]); s << ' '; COFmtF(s, cv[1]); s << ' '; COFmtF(s, cv[2]); s << " RG\n"; }
+  else { s << "0 G\n"; }
+}
+
+void COSetFill(fxcrt::ostringstream& s, int cc, const float* cv) {
+  if (cc == 1) { COFmtF(s, cv[0]); s << " g\n"; }
+  else if (cc == 3) { COFmtF(s, cv[0]); s << ' '; COFmtF(s, cv[1]); s << ' '; COFmtF(s, cv[2]); s << " rg\n"; }
+}
+
+void COEmitArrow(fxcrt::ostringstream& s, float tx, float ty,
+                 float dx, float dy, float lw, bool closed, CalloutRect& bb) {
+  float r = std::max(1.0f, lw);
+  float a = std::atan2(dy, dx);
+  float ca = std::cos(a), sa = std::sin(a);
+  float ax = tx + 8.8f*r*ca - 4.5f*r*sa, ay = ty + 8.8f*r*sa + 4.5f*r*ca;
+  float bx = tx + 8.8f*r*ca + 4.5f*r*sa, by = ty + 8.8f*r*sa - 4.5f*r*ca;
+  bb.Include(ax, ay);
+  bb.Include(bx, by);
+  COFmtPt(s, ax, ay); s << " m\n";
+  COFmtPt(s, tx, ty); s << " l\n";
+  COFmtPt(s, bx, by); s << " l\n";
+  if (closed) s << "h\n";
+}
+
+void COEmitSquare(fxcrt::ostringstream& s, float cx, float cy,
+                  float lw, CalloutRect& bb) {
+  float r = std::max(3.0f, lw * 3.0f);
+  bb.Include(cx - r, cy - r);
+  bb.Include(cx + r, cy + r);
+  COFmtF(s, cx - r); s << ' '; COFmtF(s, cy - r); s << ' ';
+  COFmtF(s, 2*r); s << ' '; COFmtF(s, 2*r); s << " re\n";
+}
+
+void COEmitCircle(fxcrt::ostringstream& s, float cx, float cy,
+                  float lw, CalloutRect& bb) {
+  float r = std::max(3.0f, lw * 3.0f);
+  bb.Include(cx - r, cy - r);
+  bb.Include(cx + r, cy + r);
+  constexpr float K = 0.551915f;
+  COFmtPt(s, cx, cy + r); s << " m\n";
+  COFmtPt(s, cx + K*r, cy + r); s << ' '; COFmtPt(s, cx + r, cy + K*r); s << ' '; COFmtPt(s, cx + r, cy); s << " c\n";
+  COFmtPt(s, cx + r, cy - K*r); s << ' '; COFmtPt(s, cx + K*r, cy - r); s << ' '; COFmtPt(s, cx, cy - r); s << " c\n";
+  COFmtPt(s, cx - K*r, cy - r); s << ' '; COFmtPt(s, cx - r, cy - K*r); s << ' '; COFmtPt(s, cx - r, cy); s << " c\n";
+  COFmtPt(s, cx - r, cy + K*r); s << ' '; COFmtPt(s, cx - K*r, cy + r); s << ' '; COFmtPt(s, cx, cy + r); s << " c\n";
+}
+
+void COEmitDiamond(fxcrt::ostringstream& s, float cx, float cy,
+                   float lw, CalloutRect& bb) {
+  float r = std::max(3.0f, lw * 3.0f);
+  bb.Include(cx - r, cy - r);
+  bb.Include(cx + r, cy + r);
+  COFmtPt(s, cx, cy + r); s << " m\n";
+  COFmtPt(s, cx + r, cy); s << " l\n";
+  COFmtPt(s, cx, cy - r); s << " l\n";
+  COFmtPt(s, cx - r, cy); s << " l\nh\n";
+}
+
+void COEmitLineEnding(fxcrt::ostringstream& s, const ByteString& name,
+                      float x, float y, float dx, float dy,
+                      float lw, int cc, const float* cv, CalloutRect& bb) {
+  if (name == "None" || name.IsEmpty())
+    return;
+  s << "q\n";
+  COFmtF(s, lw); s << " w\n";
+  COSetStroke(s, cc, cv);
+  bool fill = false;
+  if (name == "OpenArrow") {
+    COEmitArrow(s, x, y, dx, dy, lw, false, bb);
+  } else if (name == "ClosedArrow") {
+    COEmitArrow(s, x, y, dx, dy, lw, true, bb);
+    fill = true;
+  } else if (name == "ROpenArrow") {
+    COEmitArrow(s, x, y, -dx, -dy, lw, false, bb);
+  } else if (name == "RClosedArrow") {
+    COEmitArrow(s, x, y, -dx, -dy, lw, true, bb);
+    fill = true;
+  } else if (name == "Square") {
+    COEmitSquare(s, x, y, lw, bb);
+    fill = true;
+  } else if (name == "Circle") {
+    COEmitCircle(s, x, y, lw, bb);
+    fill = true;
+  } else if (name == "Diamond") {
+    COEmitDiamond(s, x, y, lw, bb);
+    fill = true;
+  } else if (name == "Butt") {
+    float r = std::max(3.0f, lw * 3.0f);
+    float a = std::atan2(dy, dx);
+    float px = -r * std::sin(a), py = r * std::cos(a);
+    bb.Include(x + px, y + py);
+    bb.Include(x - px, y - py);
+    COFmtPt(s, x + px, y + py); s << " m\n";
+    COFmtPt(s, x - px, y - py); s << " l\nS\n";
+  } else if (name == "Slash") {
+    float r = std::max(5.0f, lw * 5.0f);
+    float a = std::atan2(dy, dx) - 30.0f * 3.14159265f / 180.0f;
+    float px = r * std::cos(a), py = r * std::sin(a);
+    bb.Include(x + px, y + py);
+    bb.Include(x - px, y - py);
+    COFmtPt(s, x + px, y + py); s << " m\n";
+    COFmtPt(s, x - px, y - py); s << " l\nS\n";
+  }
+  if (fill) {
+    COSetFill(s, cc, cv);
+    s << "B\n";
+  } else if (name != "Butt" && name != "Slash") {
+    s << "S\n";
+  }
+  s << "Q\n";
+}
+
+bool GenerateCalloutAP(CPDF_Document* doc, CPDF_Dictionary* annot_dict,
+                       BlendMode blend) {
+  RetainPtr<const CPDF_Array> cl = annot_dict->GetArrayFor("CL");
+  if (!cl)
+    return CPDF_GenerateAP::GenerateAnnotAP(
+        doc, annot_dict, CPDF_Annot::Subtype::FREETEXT, blend);
+
+  size_t cl_len = cl->size();
+  if (cl_len != 4 && cl_len != 6)
+    return CPDF_GenerateAP::GenerateAnnotAP(
+        doc, annot_dict, CPDF_Annot::Subtype::FREETEXT, blend);
+
+  std::vector<float> cp(cl_len);
+  for (size_t i = 0; i < cl_len; i++)
+    cp[i] = cl->GetFloatAt(i);
+
+  RetainPtr<const CPDF_Array> rect_arr = annot_dict->GetArrayFor("Rect");
+  if (!rect_arr || rect_arr->size() != 4)
+    return false;
+
+  CalloutRect rect = {rect_arr->GetFloatAt(0), rect_arr->GetFloatAt(1),
+                      rect_arr->GetFloatAt(2), rect_arr->GetFloatAt(3)};
+  if (rect.x0 > rect.x1) std::swap(rect.x0, rect.x1);
+  if (rect.y0 > rect.y1) std::swap(rect.y0, rect.y1);
+
+  float rdl = 0, rdb = 0, rdr = 0, rdt = 0;
+  RetainPtr<const CPDF_Array> rd = annot_dict->GetArrayFor("RD");
+  if (rd && rd->size() == 4) {
+    rdl = rd->GetFloatAt(0);
+    rdb = rd->GetFloatAt(1);
+    rdr = rd->GetFloatAt(2);
+    rdt = rd->GetFloatAt(3);
+  }
+
+  CalloutRect tbox = {rect.x0 + rdl, rect.y0 + rdb,
+                      rect.x1 - rdr, rect.y1 - rdt};
+
+  float bw = 1.0f;
+  RetainPtr<const CPDF_Dictionary> bs = annot_dict->GetDictFor("BS");
+  if (bs) {
+    RetainPtr<const CPDF_Object> w_obj = bs->GetObjectFor("W");
+    if (w_obj) {
+      float w = w_obj->GetNumber();
+      if (w > 0) bw = w;
+    }
+  }
+
+  ByteString le_name = "None";
+  RetainPtr<const CPDF_Array> le = annot_dict->GetArrayFor("LE");
+  if (le && le->size() > 0) {
+    ByteString n = le->GetByteStringAt(0);
+    if (!n.IsEmpty()) le_name = n;
+  }
+
+  int cc = 0;
+  float cv[3] = {0, 0, 0};
+  RetainPtr<const CPDF_Array> c_arr = annot_dict->GetArrayFor("C");
+  if (c_arr) {
+    cc = static_cast<int>(c_arr->size());
+    for (int i = 0; i < std::min(cc, 3); i++)
+      cv[i] = c_arr->GetFloatAt(i);
+  }
+
+  {
+    RetainPtr<CPDF_Array> tmp = annot_dict->SetNewFor<CPDF_Array>("Rect");
+    tmp->AppendNew<CPDF_Number>(tbox.x0);
+    tmp->AppendNew<CPDF_Number>(tbox.y0);
+    tmp->AppendNew<CPDF_Number>(tbox.x1);
+    tmp->AppendNew<CPDF_Number>(tbox.y1);
+  }
+
+  CPDF_GenerateAP::GenerateAnnotAP(
+      doc, annot_dict, CPDF_Annot::Subtype::FREETEXT, blend);
+
+  RetainPtr<CPDF_Dictionary> ap = annot_dict->GetMutableDictFor("AP");
+  RetainPtr<CPDF_Stream> ns;
+  if (ap) ns = ap->GetMutableStreamFor("N");
+
+  pdfium::span<const uint8_t> orig_data;
+  RetainPtr<CPDF_StreamAcc> acc;
+  if (ns) {
+    acc = pdfium::MakeRetain<CPDF_StreamAcc>(ns);
+    acc->LoadAllDataFiltered();
+    orig_data = acc->GetSpan();
+  }
+
+  CalloutRect bbox = rect;
+  for (size_t i = 0; i < cl_len; i += 2)
+    bbox.Include(cp[i], cp[i + 1]);
+
+  fxcrt::ostringstream cs;
+  cs << "q\n";
+  COSetStroke(cs, cc, cv);
+  COFmtF(cs, bw); cs << " w\n";
+  COFmtPt(cs, cp[0], cp[1]); cs << " m\n";
+  for (size_t i = 2; i < cl_len; i += 2) {
+    COFmtPt(cs, cp[i], cp[i + 1]); cs << " l\n";
+  }
+  cs << "S\nQ\n";
+
+  float dx = cp[2] - cp[0], dy = cp[3] - cp[1];
+  COEmitLineEnding(cs, le_name, cp[0], cp[1], dx, dy, bw, cc, cv, bbox);
+
+  bbox.Inflate(bw);
+
+  if (ns) {
+    fxcrt::ostringstream combined;
+    auto callout_str = cs.str();
+    combined.write(callout_str.data(), callout_str.size());
+    combined.write(reinterpret_cast<const char*>(orig_data.data()),
+                   orig_data.size());
+
+    auto content = combined.str();
+    ns->SetData(UNSAFE_BUFFERS(pdfium::span<const uint8_t>(
+        reinterpret_cast<const uint8_t*>(content.data()), content.size())));
+
+    RetainPtr<CPDF_Dictionary> sd = ns->GetMutableDict();
+    if (sd) {
+      RetainPtr<CPDF_Array> bb = sd->SetNewFor<CPDF_Array>("BBox");
+      bb->AppendNew<CPDF_Number>(bbox.x0);
+      bb->AppendNew<CPDF_Number>(bbox.y0);
+      bb->AppendNew<CPDF_Number>(bbox.x1);
+      bb->AppendNew<CPDF_Number>(bbox.y1);
+    }
+  }
+
+  {
+    RetainPtr<CPDF_Array> r = annot_dict->SetNewFor<CPDF_Array>("Rect");
+    r->AppendNew<CPDF_Number>(bbox.x0);
+    r->AppendNew<CPDF_Number>(bbox.y0);
+    r->AppendNew<CPDF_Number>(bbox.x1);
+    r->AppendNew<CPDF_Number>(bbox.y1);
+  }
+
+  {
+    RetainPtr<CPDF_Array> new_rd = annot_dict->SetNewFor<CPDF_Array>("RD");
+    new_rd->AppendNew<CPDF_Number>(tbox.x0 - bbox.x0);
+    new_rd->AppendNew<CPDF_Number>(tbox.y0 - bbox.y0);
+    new_rd->AppendNew<CPDF_Number>(bbox.x1 - tbox.x1);
+    new_rd->AppendNew<CPDF_Number>(bbox.y1 - tbox.y1);
+  }
+
+  return true;
+}
+
 }  // namespace
 
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
@@ -2701,26 +2982,25 @@ EPDFAnnot_SetBorderStyle(FPDF_ANNOTATION annot,
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 EPDFAnnot_GenerateAppearance(FPDF_ANNOTATION annot) {
   CPDF_AnnotContext* pContext = CPDFAnnotContextFromFPDFAnnotation(annot);
-  if (!pContext) {
+  if (!pContext)
     return false;
-  }
 
   RetainPtr<CPDF_Dictionary> pAnnotDict = pContext->GetMutableAnnotDict();
-  if (!pAnnotDict) {
+  if (!pAnnotDict)
     return false;
-  }
 
-  // CPDF_GenerateAP needs the document, which we can get from the page context.
   CPDF_Document* pDoc = pContext->GetPage()->GetDocument();
-  if (!pDoc) {
+  if (!pDoc)
     return false;
-  }
 
-  // Get the annotation subtype to pass to the generator.
   const CPDF_Annot::Subtype subtype = CPDF_Annot::StringToAnnotSubtype(
       pAnnotDict->GetNameFor(pdfium::annotation::kSubtype));
 
-  // This is the key: call the internal AP generator.
+  if (subtype == CPDF_Annot::Subtype::FREETEXT &&
+      pAnnotDict->GetNameFor("IT") == "FreeTextCallout") {
+    return GenerateCalloutAP(pDoc, pAnnotDict.Get(), BlendMode::kNormal);
+  }
+
   return CPDF_GenerateAP::GenerateAnnotAP(pDoc, pAnnotDict.Get(), subtype);
 }
 
@@ -2742,8 +3022,12 @@ EPDFAnnot_GenerateAppearanceWithBlend(FPDF_ANNOTATION annot,
   const CPDF_Annot::Subtype subtype = CPDF_Annot::StringToAnnotSubtype(
       annot_dict->GetNameFor(pdfium::annotation::kSubtype));
 
-  // Validate blend enum range if needed (already static_assert aligned).
   auto internal = static_cast<BlendMode>(blend);
+
+  if (subtype == CPDF_Annot::Subtype::FREETEXT &&
+      annot_dict->GetNameFor("IT") == "FreeTextCallout") {
+    return GenerateCalloutAP(doc, annot_dict.Get(), internal);
+  }
 
   return CPDF_GenerateAP::GenerateAnnotAP(doc, annot_dict.Get(), subtype,
                                           internal);
@@ -2836,9 +3120,9 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 EPDFAnnot_SetLineEndings(FPDF_ANNOTATION annot,
                          FPDF_ANNOT_LINE_END start_style,
                          FPDF_ANNOT_LINE_END end_style) {
-  // Only LINE (and optionally POLYLINE) annotations have /LE.
   FPDF_ANNOTATION_SUBTYPE subtype = FPDFAnnot_GetSubtype(annot);
-  if (subtype != FPDF_ANNOT_LINE && subtype != FPDF_ANNOT_POLYLINE)
+  if (subtype != FPDF_ANNOT_LINE && subtype != FPDF_ANNOT_POLYLINE &&
+      subtype != FPDF_ANNOT_FREETEXT)
     return false;
 
   RetainPtr<CPDF_Dictionary> dict = GetMutableAnnotDictFromFPDFAnnotation(annot);
@@ -2902,7 +3186,8 @@ EPDFAnnot_GetLineEndings(FPDF_ANNOTATION annot,
     return false;
 
   FPDF_ANNOTATION_SUBTYPE subtype = FPDFAnnot_GetSubtype(annot);
-  if (subtype != FPDF_ANNOT_LINE && subtype != FPDF_ANNOT_POLYLINE)
+  if (subtype != FPDF_ANNOT_LINE && subtype != FPDF_ANNOT_POLYLINE &&
+      subtype != FPDF_ANNOT_FREETEXT)
     return false;
 
   const CPDF_Dictionary* dict = GetAnnotDictFromFPDFAnnotation(annot);

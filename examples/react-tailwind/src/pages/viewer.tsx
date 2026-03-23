@@ -58,6 +58,8 @@ type SidebarState = {
 export function ViewerPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: '/pdfium.wasm',
+    worker: false,
     logger,
   });
 

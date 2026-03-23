@@ -396,6 +396,10 @@ if (is_android) {
       [ "//build/config/android:default_orderfile_instrumentation" ]
 }
 
+if (is_wasm) {
+  default_compiler_configs -= [ "//build/config/compiler:libcxx_hardening" ]
+}
+
 if (is_clang && !is_nacl) {
   default_compiler_configs += [
     "//build/config/clang:extra_warnings",

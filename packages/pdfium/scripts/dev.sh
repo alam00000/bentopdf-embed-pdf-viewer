@@ -57,6 +57,9 @@ cp -f "$PDFIUM/build/patch/public/fpdf_annot.h" \
 cp -f "$PDFIUM/build/patch/constants/annotation_common.h" \
       "$SRC/constants/annotation_common.h"
 
+cp -f "$PDFIUM/build/patch/third_party/libpng/visibility.gni" \
+      "$SRC/third_party/libpng/visibility.gni"
+
 
 #if command -v mountpoint >/dev/null 2>&1 && mountpoint -q "$OUT"; then
 #  echo "⚠️ $OUT is a mount — clearing contents only"
@@ -109,7 +112,7 @@ WATCHER_SCRIPT=$(typeset -f gen_exports)$'\n'"\
 rm -rf \"$PDFIUM/build/wasm\" && mkdir -p \"$PDFIUM/build/wasm\"; \
 \
 echo \"🛠 \$(date +%H:%M:%S) Rebuilding…\";\
-ninja -C \"$OUT\" pdfium -v;\
+ninja -j${NINJA_JOBS:-4} -C \"$OUT\" pdfium -v;\
 gen_exports;\
 cd $PDFIUM/build && bash ./compile.esm.sh && bash ./compile.sh;\
 # ⬇️  copy freshly-built artefacts into src/vendor (overwrite if they exist)
